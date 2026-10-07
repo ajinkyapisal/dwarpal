@@ -358,7 +358,11 @@ fn messages_are_single_clean_lines() {
     for f in json["findings"].as_array().unwrap() {
         for field in ["title", "detail", "prompt"] {
             let text = f[field].as_str().unwrap();
-            assert!(!text.contains('\n') && !text.contains("   "), "{} {field}: {text:?}", f["rule"]);
+            assert!(
+                !text.contains('\n') && !text.contains("   "),
+                "{} {field}: {text:?}",
+                f["rule"]
+            );
         }
     }
     fs::remove_dir_all(root).unwrap();
