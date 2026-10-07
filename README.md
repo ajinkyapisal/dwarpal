@@ -8,9 +8,62 @@ open. dwarpal reads your project and tells you, in plain language, what an
 attacker could do and exactly how to fix it, with a prompt you can paste
 straight into your coding agent.
 
-> Status: early. The first check, for Firebase security rules, is here. More
-> checks (leaked keys, vulnerable packages, Supabase, Next.js routes) are
-> coming.
+> Status: early. The API and output may change.
+
+## Scan a project
+
+```bash
+dwarpal scan            # in your project
+dwarpal scan path/to/app --format json
+```
+
+```text
+dwarpal scan: Next.js · React · Supabase · OpenAI
+  secrets in config: checked
+  Supabase tables: checked
+  gitleaks: checked secrets in code and git history
+  trivy: checked vulnerable packages
+
+CRITICAL  Secret exposed to the browser: NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+          .env.local:3
+          Next.js puts every variable starting with its public prefix into the JavaScript sent to
+          visitors, and its value is a Supabase service_role key. Anyone can open your site, read
+          it from the page source, and use it as you.
+          Fix: Rename it to SUPABASE_SERVICE_ROLE_KEY (no public prefix), use it only in server
+               code, and rotate the key.
+
+CRITICAL  Table `orders` has no row-level security
+          supabase/migrations/20260101000000_init.sql:4
+          Supabase exposes every table in the public schema through its API. Without row-level
+          security, anyone with your anon key, which is in your frontend, can read, change and
+          delete every row of `orders`.
+```
+
+It works out your stack, runs dwarpal's own checks and the scanners you have
+installed, then merges, filters and ranks everything:
+
+| Check | What it finds |
+|---|---|
+| EX001 | Secrets in `NEXT_PUBLIC_`, `VITE_`, `EXPO_PUBLIC_` and similar variables, which ship to the browser. Judged by the variable's name and by its value: service_role keys, Stripe, OpenAI and Anthropic keys, database URLs |
+| EX002 | The Supabase service_role key used in browser code (`"use client"` files, Vite/Expo `src/`) |
+| EX003 | `.env` files with real secrets committed to git |
+| EX004 | `.env` files git would commit on the next `git add .` |
+| SB001 | Supabase tables without row-level security (from `supabase/migrations`) |
+| SB002 | Policies whose condition is `true`, such as the "Allow all for demo" policies AI tools leave behind |
+| SB003 | Row-level security turned off |
+| FB…, RT… | Firebase rules, see below |
+| GL001 | Secrets in code and git history, via [gitleaks](https://github.com/gitleaks/gitleaks) |
+| DV001, DV002 | Vulnerable packages, via [Trivy](https://github.com/aquasecurity/trivy) |
+
+**Built to cut noise:**
+- **Keys that are public by design are skipped.** That includes Supabase anon and `sb_publishable_` keys (dwarpal decodes Supabase keys to tell anon from service_role), Firebase web API keys, documentation placeholders, and `.env` files that only hold public values (Lovable commits these on purpose).
+- **One secret, one finding,** even when it appears in many commits.
+- **One finding per vulnerable package** (not one per CVE), with the exact version to upgrade to, and what your current major version can reach if the full fix needs a new major.
+- **Packages are judged by how they reach your app:** dev-only tools are reported as low, and indirect packages are grouped into a single "run `npm update`" finding unless something is critical.
+- **Problems in your own code rank above dependency issues** of the same severity.
+
+gitleaks and Trivy are optional (`brew install gitleaks trivy`); without them,
+dwarpal says what it skipped. `--no-external` runs only dwarpal's own checks.
 
 ## Firebase security rules
 
@@ -65,7 +118,7 @@ ready-to-paste instruction for Claude Code, Cursor, Lovable and similar tools.
 Exit status: `0` no findings at or above `--fail-on`, `1` findings, `2` a rules
 file couldn't be read or parsed.
 
-### How sure are the findings?
+### How sure are the Firebase findings?
 
 - **Proven against Google's emulator.** `emulator/exploits.test.js` performs the
   actual attack for every kind of finding against the Firebase emulators. Each
@@ -81,9 +134,18 @@ file couldn't be read or parsed.
 - **It reads rules, not data.** It can't know your intent. A rule that is open on
   purpose will still be reported.
 
+### How the scan was tested
+
+`tests/scan.rs` builds a typical AI-generated Next.js + Supabase app with the
+usual mistakes in a temporary git repository and checks every finding, and a
+correctly built version that must come back clean. The scan was also run on 30
+public Lovable/Bolt-built repositories; every false alarm found there (public
+Supabase keys, documentation placeholders, Lovable's committed `.env`, dropped
+policies, dependency noise) was fixed and added as a test.
+
 ## Development
 
 ```bash
-cargo test                      # unit and CLI tests
+cargo test                      # unit, CLI and end-to-end scan tests
 cd emulator && npm install && npm test   # exploit tests (needs Java 11+)
 ```

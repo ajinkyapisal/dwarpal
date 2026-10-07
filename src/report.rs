@@ -64,7 +64,8 @@ pub struct FileError {
     pub message: String,
 }
 
-pub fn text(findings: &[Finding], errors: &[FileError], files_checked: usize) -> String {
+/// `scope` starts the summary line, e.g. "3 file(s) checked".
+pub fn text(findings: &[Finding], errors: &[FileError], scope: &str) -> String {
     let color = std::io::stdout().is_terminal() && std::env::var_os("NO_COLOR").is_none();
     let paint = |code: &str, s: &str| {
         if color {
@@ -76,11 +77,16 @@ pub fn text(findings: &[Finding], errors: &[FileError], files_checked: usize) ->
     let mut out = String::new();
     for f in findings {
         out.push_str(&format!(
-            "{}  {}\n          {}:{}\n          {}\n          Fix: {}\n\n",
+            "{}  {}\n          {}:{}{}\n          {}\n          Fix: {}\n\n",
             paint(f.severity.color(), &format!("{:<8}", f.severity.label())),
             paint("\x1b[1m", &f.title),
             f.file,
             f.line,
+            if f.source == "dwarpal" {
+                String::new()
+            } else {
+                format!("  (found by {})", f.source)
+            },
             f.detail,
             f.fix.replace('\n', "\n               "),
         ));
@@ -95,8 +101,7 @@ pub fn text(findings: &[Finding], errors: &[FileError], files_checked: usize) ->
     }
     let count = |s: Severity| findings.iter().filter(|f| f.severity == s).count();
     out.push_str(&format!(
-        "{} file(s) checked: {} critical, {} high, {} medium, {} low{}\n",
-        files_checked,
+        "{scope}: {} critical, {} high, {} medium, {} low{}\n",
         count(Severity::Critical),
         count(Severity::High),
         count(Severity::Medium),
@@ -108,11 +113,6 @@ pub fn text(findings: &[Finding], errors: &[FileError], files_checked: usize) ->
         },
     ));
     out
-}
-
-pub fn json(findings: &[Finding], errors: &[FileError]) -> String {
-    serde_json::to_string_pretty(&serde_json::json!({ "findings": findings, "errors": errors }))
-        .unwrap()
 }
 
 pub fn sarif(findings: &[Finding]) -> String {
