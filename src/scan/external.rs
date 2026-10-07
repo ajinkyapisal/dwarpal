@@ -467,18 +467,14 @@ fn update_command(lockfile: &str) -> &'static str {
 /// Trivy titles repeat the package name ("seroval: Seroval: `fromJSON()`..."):
 /// drop those prefixes and cut long titles at a word boundary.
 fn clean_title(package: &str, title: &str) -> String {
-    let mut t = title.trim();
-    loop {
-        let Some((head, rest)) = t.split_once(": ") else {
-            break;
-        };
-        let simple = |s: &str| s.to_lowercase().replace(|c: char| !c.is_alphanumeric(), "");
+    let simple = |s: &str| s.to_lowercase().replace(|c: char| !c.is_alphanumeric(), "");
+    let names_package = |head: &str| {
         let (h, p) = (simple(head), simple(package));
-        if !h.is_empty() && head.len() < 30 && (h.contains(&p) || p.contains(&h)) {
-            t = rest.trim();
-        } else {
-            break;
-        }
+        !h.is_empty() && head.len() < 30 && (h.contains(&p) || p.contains(&h))
+    };
+    let mut t = title.trim();
+    while let Some((_, rest)) = t.split_once(": ").filter(|(head, _)| names_package(head)) {
+        t = rest.trim();
     }
     if t.chars().count() <= 90 {
         return t.to_string();
