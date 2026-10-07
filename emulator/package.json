@@ -1,0 +1,14 @@
+{
+  "name": "dwarpal-emulator-tests",
+  "private": true,
+  "type": "module",
+  "description": "Proves dwarpal's findings are exploitable, using the Firebase emulators.",
+  "scripts": {
+    "test": "firebase emulators:exec --project demo-dwarpal --only firestore,storage,database 'node --test'"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^10.14.1",
+    "firebase-tools": "^13.35.1"
+  }
+}

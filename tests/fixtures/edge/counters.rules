@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /posts/{postId} {
+      allow update: if request.auth.uid == resource.data.uid
+        || (request.auth != null
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'viewCount']));
+    }
+  }
+}

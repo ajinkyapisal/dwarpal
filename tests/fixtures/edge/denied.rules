@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow list: if false; // no scraping
+      allow update, delete: if false && request.auth != null;
+      allow get: if !true;
+    }
+  }
+}

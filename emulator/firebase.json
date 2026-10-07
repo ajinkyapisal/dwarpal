@@ -1,0 +1,25 @@
+{
+  "firestore": {
+    "rules": "startup.firestore.rules"
+  },
+  "storage": {
+    "rules": "startup.storage.rules"
+  },
+  "database": {
+    "rules": "startup.database.rules.json"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8181
+    },
+    "storage": {
+      "port": 9199
+    },
+    "database": {
+      "port": 9000
+    },
+    "ui": {
+      "enabled": false
+    }
+  }
+}

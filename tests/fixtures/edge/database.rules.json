@@ -1,0 +1,8 @@
+{
+  "rules": {
+    ".write": "auth == null || auth != null",
+    "boards": {
+      ".write": "auth === null"
+    }
+  }
+}

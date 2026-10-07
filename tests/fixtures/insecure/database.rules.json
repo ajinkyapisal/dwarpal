@@ -1,0 +1,16 @@
+{
+  // Realtime Database
+  "rules": {
+    ".read": "now < 1767225600000",
+    ".write": "now < 1767225600000",
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "public": {
+      ".read": true
+    }
+  }
+}

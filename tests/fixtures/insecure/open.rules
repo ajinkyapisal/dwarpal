@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /posts/{postId} {
+      allow read, write;
+    }
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.resource.data.text is string;
+    }
+  }
+}

@@ -1,0 +1,3 @@
+/target
+emulator/node_modules/
+*.log
