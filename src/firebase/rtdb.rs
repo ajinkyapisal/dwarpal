@@ -157,6 +157,7 @@ fn check_rule(
         };
         Some(Finding {
             rule,
+            source: "dwarpal",
             severity,
             file: file.to_string(),
             line,

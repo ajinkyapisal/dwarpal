@@ -328,6 +328,7 @@ fn access_finding(site: &Site, file: &str) -> Option<Finding> {
     let finding = |rule, severity, title: String, detail: String, fix: String| {
         Some(Finding {
             rule,
+            source: "dwarpal",
             severity,
             file: file.to_string(),
             line: site.line,
@@ -572,6 +573,7 @@ fn escalation_finding(site: &Site, lookups: &[(String, String)], file: &str) -> 
     let path = display_path(&site.path);
     Some(Finding {
         rule: "FB006",
+        source: "dwarpal",
         severity: Severity::Critical,
         file: file.to_string(),
         line: site.line,
@@ -621,6 +623,7 @@ fn upload_limits_finding(site: &Site, file: &str) -> Option<Finding> {
     let path = display_path(&site.path);
     Some(Finding {
         rule: "FB007",
+        source: "dwarpal",
         severity: Severity::Medium,
         file: file.to_string(),
         line: site.line,

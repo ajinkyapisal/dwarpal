@@ -43,6 +43,8 @@ impl Severity {
 #[derive(Debug, Clone, Serialize)]
 pub struct Finding {
     pub rule: &'static str,
+    /// "dwarpal", or the external scanner that found it.
+    pub source: &'static str,
     pub severity: Severity,
     pub file: String,
     pub line: usize,

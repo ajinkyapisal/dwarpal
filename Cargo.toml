@@ -2,6 +2,7 @@
 name = "dwarpal"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.86"
 description = "Security checks for apps built with AI coding tools"
 license = "MIT"
 repository = "https://github.com/ajinkyapisal/dwarpal"
